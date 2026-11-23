@@ -148,6 +148,12 @@
           <div class="err">Masukkan alamat email yang valid.</div>
         </div>
 
+        <div class="field" data-f="domisili">
+          <label for="domisili">Domisili Saat Ini <span class="req">*</span></label>
+          <input type="text" id="domisili" name="domisili" placeholder="Contoh: Surakarta, Jawa Tengah" autocomplete="address-level2" maxlength="100">
+          <div class="err">Domisili saat ini wajib diisi (kota/kabupaten dan provinsi).</div>
+        </div>
+
         <div class="field" data-f="cv">
           <label for="cv">Upload CV Terbaru <span class="req">*</span></label>
           <div class="drop" id="drop" tabindex="0" role="button" aria-label="Pilih file CV">
@@ -189,13 +195,13 @@
 /* ============ KONFIGURASI ============ */
 const CONFIG = {
   // Tempel URL Web App Google Apps Script (berakhiran /exec) di sini
-  SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbw5CXWocSRaOu6Pc3RLV3qM9HWUwDm3tlkf9MMYtvr5rPEPQnhQxKVO-mQbH0k2mn6OUw/exec',
+  SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbzPkJ1xg32QGx1O-DAqfbNvz2Lbyt4Wi3GsWGGdet2PCzgqv6P2cAOFHa07R3u2yot1fg/exec',
   MAX_MB: 5,
   // Daftar cadangan. Jika Apps Script aktif, daftar akan diambil dari sheet "Referensi" kolom A.
   POSITIONS: [
     'Supervisor Purchasing',
     'Supervisor Finance, Accounting & Tax',
-    'Manager Finance, Accounting & Tax',
+    'Manager Finance, Accounting & Tax'
     'Cost Control'
   ]
 };
@@ -274,10 +280,11 @@ function validate(){
   bad('posisi', !$('posisi').value);
   bad('wa', !waOk($('wa').value.trim()));
   bad('email', !emailOk($('email').value.trim()));
+  bad('domisili', $('domisili').value.trim().length < 3);
   if (!file){ setInvalid('cv', true, 'CV wajib diunggah dalam format PDF (maks. '+CONFIG.MAX_MB+' MB).'); ok = false; }
   return ok;
 }
-['nama','posisi','wa','email'].forEach(k => $(k).addEventListener('input', () => setInvalid(k,false)));
+['nama','posisi','wa','email','domisili'].forEach(k => $(k).addEventListener('input', () => setInvalid(k,false)));
 
 /* ---------- Submit ---------- */
 form.addEventListener('submit', async e => {
@@ -296,6 +303,7 @@ form.addEventListener('submit', async e => {
       posisi: $('posisi').value,
       wa: $('wa').value.trim(),
       email: $('email').value.trim(),
+      domisili: $('domisili').value.trim(),
       cvName: file.name,
       cvBase64: await toBase64(file)
     };
