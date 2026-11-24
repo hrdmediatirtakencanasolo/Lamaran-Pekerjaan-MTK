@@ -151,7 +151,8 @@
         <div class="field" data-f="domisili">
           <label for="domisili">Domisili Saat Ini <span class="req">*</span></label>
           <input type="text" id="domisili" name="domisili" placeholder="Contoh: Surakarta, Jawa Tengah" autocomplete="address-level2" maxlength="100">
-          <div class="err">Domisili saat ini wajib diisi (kota/kabupaten dan provinsi).</div>
+          <div class="err">Domisili wajib diisi (kota/kabupaten dan provinsi).</div>
+          <div class="hint">Tuliskan kota/kabupaten dan provinsi tempat Anda tinggal saat ini.</div>
         </div>
 
         <div class="field" data-f="cv">
@@ -188,7 +189,7 @@
 
 <footer>
   <b>PT. Media Tirta Kencana</b>
-  <span>Human Resources Development</span>
+  <span>Human Capital &amp; General Affairs</span>
 </footer>
 
 <script>
@@ -202,6 +203,11 @@ const CONFIG = {
     'Supervisor Purchasing',
     'Supervisor Finance, Accounting & Tax',
     'Manager Finance, Accounting & Tax',
+    'Cost Control',
+    'Warehouse Restaurant',
+    'Steward',
+    'Waiters/Server',
+    'Butcher'
   ]
 };
 /* ===================================== */
@@ -226,7 +232,12 @@ const scriptReady = () => /^https:\/\/script\.google\.com\/.+\/exec/.test(CONFIG
   try {
     const r = await fetch(CONFIG.SCRIPT_URL);
     const d = await r.json();
-    if (d && Array.isArray(d.posisi) && d.posisi.length) fillPositions(d.posisi);
+    if (d && Array.isArray(d.posisi) && d.posisi.length){
+      // Gabungkan daftar cadangan (HTML) + daftar dari sheet, tanpa duplikat
+      const merged = [...CONFIG.POSITIONS];
+      d.posisi.forEach(p => { p = String(p).trim(); if (p && !merged.includes(p)) merged.push(p); });
+      fillPositions(merged);
+    }
   } catch (_) {}
 })();
 
@@ -278,8 +289,8 @@ function validate(){
   bad('nama', nama.length < 3);
   bad('posisi', !$('posisi').value);
   bad('wa', !waOk($('wa').value.trim()));
-  bad('email', !emailOk($('email').value.trim()));
   bad('domisili', $('domisili').value.trim().length < 3);
+  bad('email', !emailOk($('email').value.trim()));
   if (!file){ setInvalid('cv', true, 'CV wajib diunggah dalam format PDF (maks. '+CONFIG.MAX_MB+' MB).'); ok = false; }
   return ok;
 }
@@ -318,7 +329,12 @@ form.addEventListener('submit', async e => {
     $('successView').classList.add('show');
     window.scrollTo({top:0, behavior:'smooth'});
   } catch (err) {
-    showAlert((err && err.message ? err.message : 'Gagal mengirim lamaran.') + ' Silakan coba lagi.');
+    const m = err && err.message ? err.message : '';
+    if (/failed to fetch|networkerror|load failed/i.test(m)){
+      showAlert('Tidak dapat terhubung ke server penerima lamaran. Periksa koneksi internet Anda, lalu coba lagi. Jika masih gagal, hubungi admin HRD.');
+    } else {
+      showAlert((m || 'Gagal mengirim lamaran.') + ' Silakan coba lagi.');
+    }
   } finally {
     btn.disabled = false; btn.textContent = 'Kirim Lamaran →';
   }
